@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<title>Kalendorkisz</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #6dd5ed, #2193b0);
+    text-align: center;
+    margin: 0;
+    padding: 20px;
+    color: #333;
+}
+
+.container {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    max-width: 600px;
+    margin: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+h1 {
+    margin-bottom: 10px;
+}
+
+input, button {
+    font-size: 16px;
+    padding: 10px;
+    margin: 10px;
+    border-radius: 10px;
+    border: none;
+}
+
+button {
+    background: #2193b0;
+    color: white;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    background: #176d84;
+}
+
+#wynik {
+    font-size: 22px;
+    margin-top: 20px;
+    font-weight: bold;
+}
+
+table {
+    margin: 20px auto;
+    border-collapse: collapse;
+}
+
+td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    min-width: 40px;
+    transition: 0.2s;
+}
+
+td:hover {
+    background: #eee;
+}
+
+.active {
+    background: #ffeb3b;
+    font-weight: bold;
+}
+
+footer {
+    margin-top: 30px;
+    font-size: 14px;
+    opacity: 0.7;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h1>📅 Kalendorkisz</h1>
+
+<p>Wybierz datę:</p>
+<input type="date" id="data">
+<br>
+<button onclick="przelicz()">Sprawdź</button>
+
+<div id="wynik"></div>
+<div id="kalendarz"></div>
+
+<footer>
+    zrobione przez swinkastepan
+</footer>
+</div>
+
+<script>
+const START = new Date("0001-01-01T00:00:00Z");
+
+const months = ["mrożąc", "ciepłąc", "środnąc", "kolorąc", "kończąc"];
+
+const weekdays = [
+    "permulan",
+    "erta",
+    "dopo",
+    "durin",
+    "keskela",
+    "halvim",
+    "naidvara",
+    "samstag",
+    "alafia",
+    "festo"
+];
+
+function getWeekLength(day) {
+    if (day <= 30) return 10;
+    else if (day <= 39) return 9;
+    else if (day <= 47) return 8;
+    else if (day <= 54) return 7;
+    else if (day <= 60) return 6;
+    else if (day <= 65) return 5;
+    else if (day <= 69) return 4;
+    else if (day <= 72) return 3;
+    else return 2;
+}
+
+function przelicz() {
+    const input = document.getElementById("data").value;
+
+    if (!input) {
+        alert("Wybierz datę!");
+        return;
+    }
+
+    const inputDate = new Date(input + "T00:00:00Z");
+    const diff = Math.floor((inputDate - START) / (1000 * 60 * 60 * 24));
+
+    const totalDays = 74 * 5;
+    const dayOfYear = ((diff % totalDays) + totalDays) % totalDays;
+
+    const monthIndex = Math.floor(dayOfYear / 74);
+    const dayInMonth = (dayOfYear % 74) + 1;
+
+    let d = dayInMonth;
+    let currentDay = 1;
+    let weekDayIndex = 0;
+
+    while (true) {
+        let weekLen = getWeekLength(currentDay);
+
+        if (d <= weekLen) {
+            weekDayIndex = d - 1;
+            break;
+        }
+
+        d -= weekLen;
+        currentDay += weekLen;
+    }
+
+    document.getElementById("wynik").innerText =
+        `W Kalendorkiszu: ${weekdays[weekDayIndex]}, ${dayInMonth} dzień miesiąca ${months[monthIndex]}`;
+
+    generujKalendarz(dayInMonth);
+}
+
+function generujKalendarz(activeDay) {
+    let html = "<table>";
+    let day = 1;
+
+    while (day <= 74) {
+        let weekLen = getWeekLength(day);
+        html += "<tr>";
+
+        for (let i = 0; i < weekLen; i++) {
+            if (day > 74) break;
+
+            let className = (day === activeDay) ? "active" : "";
+
+            html += `<td class="${className}">${day}</td>`;
+            day++;
+        }
+
+        html += "</tr>";
+    }
+
+    html += "</table>";
+    document.getElementById("kalendarz").innerHTML = html;
+}
+</script>
+
+</body>
+</html>

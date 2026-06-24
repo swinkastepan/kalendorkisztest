@@ -6,84 +6,91 @@
 
 <style>
 body {
-    font-family: Arial, sans-serif;
-    background: linear-gradient(135deg, #6dd5ed, #2193b0);
+    font-family: Arial;
     text-align: center;
-    margin: 0;
-    padding: 20px;
-    color: #333;
-}
-
-.container {
-    background: white;
-    padding: 30px;
-    border-radius: 20px;
-    max-width: 600px;
-    margin: auto;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    margin-top: 40px;
+    background: #f5f5f5;
 }
 
 h1 {
-    margin-bottom: 10px;
+    font-size: 40px;
 }
 
 input, button {
-    font-size: 16px;
+    font-size: 18px;
     padding: 10px;
     margin: 10px;
-    border-radius: 10px;
-    border: none;
+    border-radius: 8px;
+    border: 1px solid #ccc;
 }
 
 button {
-    background: #2193b0;
-    color: white;
     cursor: pointer;
-    transition: 0.3s;
-}
-
-button:hover {
-    background: #176d84;
+    background: #4CAF50;
+    color: white;
 }
 
 #wynik {
-    font-size: 22px;
+    font-size: 24px;
     margin-top: 20px;
     font-weight: bold;
 }
 
-table {
-    margin: 20px auto;
-    border-collapse: collapse;
+#grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 5px;
+    margin: 30px auto;
+    max-width: 800px;
 }
 
-td {
-    border: 1px solid #ddd;
+.day {
     padding: 10px;
-    min-width: 40px;
-    transition: 0.2s;
-}
-
-td:hover {
-    background: #eee;
+    background: white;
+    border-radius: 6px;
+    font-size: 14px;
 }
 
 .active {
-    background: #ffeb3b;
+    background: gold;
     font-weight: bold;
 }
 
+/* 🎬 VIDEO */
+#videoContainer {
+    display: none;
+    position: fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:black;
+    justify-content:center;
+    align-items:center;
+    z-index: 999;
+    animation: fadeIn 0.4s;
+}
+
+video {
+    width: 80%;
+    border-radius: 10px;
+}
+
+@keyframes fadeIn {
+    from {opacity:0;}
+    to {opacity:1;}
+}
+
 footer {
-    margin-top: 30px;
+    margin-top: 40px;
     font-size: 14px;
-    opacity: 0.7;
+    color: gray;
 }
 </style>
 </head>
 
 <body>
 
-<div class="container">
 <h1>📅 Kalendorkisz</h1>
 
 <p>Wybierz datę:</p>
@@ -92,30 +99,23 @@ footer {
 <button onclick="przelicz()">Sprawdź</button>
 
 <div id="wynik"></div>
-<div id="kalendarz"></div>
+<div id="grid"></div>
 
-<footer>
-    zrobione przez swinkastepan
-</footer>
+<!-- 🎬 VIDEO -->
+<div id="videoContainer">
+    <video id="secretVideo" controls>
+        <source src="orkaeditto2.mp4" type="video/mp4">
+        Twoja przeglądarka nie obsługuje wideo
+    </video>
 </div>
 
+<footer>zrobione przez swinkastepan</footer>
+
 <script>
-const START = new Date("0001-01-01T00:00:00Z");
+const START = new Date("0001-01-01");
 
 const months = ["mrożąc", "ciepłąc", "środnąc", "kolorąc", "kończąc"];
-
-const weekdays = [
-    "permulan",
-    "erta",
-    "dopo",
-    "durin",
-    "keskela",
-    "halvim",
-    "naidvara",
-    "samstag",
-    "alafia",
-    "festo"
-];
+const weekdays = ["permulan","erta","dopo","durin","keskela","halvim","naidvara","samstag","alafia","festo"];
 
 function getWeekLength(day) {
     if (day <= 30) return 10;
@@ -131,17 +131,13 @@ function getWeekLength(day) {
 
 function przelicz() {
     const input = document.getElementById("data").value;
+    if (!input) return alert("Wybierz datę!");
 
-    if (!input) {
-        alert("Wybierz datę!");
-        return;
-    }
+    const inputDate = new Date(input);
+    const diff = Math.floor((inputDate - START) / (1000*60*60*24));
 
-    const inputDate = new Date(input + "T00:00:00Z");
-    const diff = Math.floor((inputDate - START) / (1000 * 60 * 60 * 24));
-
-    const totalDays = 74 * 5;
-    const dayOfYear = ((diff % totalDays) + totalDays) % totalDays;
+    const total = 74 * 5;
+    const dayOfYear = ((diff % total) + total) % total;
 
     const monthIndex = Math.floor(dayOfYear / 74);
     const dayInMonth = (dayOfYear % 74) + 1;
@@ -165,32 +161,60 @@ function przelicz() {
     document.getElementById("wynik").innerText =
         `W Kalendorkiszu: ${weekdays[weekDayIndex]}, ${dayInMonth} dzień miesiąca ${months[monthIndex]}`;
 
-    generujKalendarz(dayInMonth);
+    drawCalendar(dayInMonth);
 }
 
-function generujKalendarz(activeDay) {
-    let html = "<table>";
-    let day = 1;
+function drawCalendar(activeDay) {
+    const grid = document.getElementById("grid");
+    grid.innerHTML = "";
 
-    while (day <= 74) {
-        let weekLen = getWeekLength(day);
-        html += "<tr>";
+    for (let i = 1; i <= 74; i++) {
+        const div = document.createElement("div");
+        div.className = "day";
+        div.innerText = i;
 
-        for (let i = 0; i < weekLen; i++) {
-            if (day > 74) break;
-
-            let className = (day === activeDay) ? "active" : "";
-
-            html += `<td class="${className}">${day}</td>`;
-            day++;
+        if (i === activeDay) {
+            div.classList.add("active");
         }
 
-        html += "</tr>";
+        grid.appendChild(div);
     }
-
-    html += "</table>";
-    document.getElementById("kalendarz").innerHTML = html;
 }
+
+/* 🎬 EASTER EGG */
+let spaceCount = 0;
+let lastPress = 0;
+
+document.addEventListener("keydown", (e) => {
+    if (e.code === "Space") {
+        const now = Date.now();
+
+        if (now - lastPress > 1000) {
+            spaceCount = 0;
+        }
+
+        spaceCount++;
+        lastPress = now;
+
+        if (spaceCount === 5) {
+            showVideo();
+            spaceCount = 0;
+        }
+    }
+});
+
+function showVideo() {
+    const container = document.getElementById("videoContainer");
+    const video = document.getElementById("secretVideo");
+
+    container.style.display = "flex";
+    video.currentTime = 0;
+    video.play();
+}
+
+document.getElementById("secretVideo").addEventListener("ended", () => {
+    document.getElementById("videoContainer").style.display = "none";
+});
 </script>
 
 </body>
